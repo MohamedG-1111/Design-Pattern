@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>شرح Factory Design Patterns في C# و ASP.NET Core</title>
+<style>
+:root{--bg:#f4f7fb;--paper:#fff;--ink:#182235;--muted:#64748b;--blue:#2563eb;--blue-bg:#eff6ff;--green:#15803d;--green-bg:#f0fdf4;--orange:#c2410c;--orange-bg:#fff7ed;--line:#dce4ef;--code:#111827;--code-ink:#e5edf7}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:Tahoma,Arial,sans-serif;line-height:1.9}.wrap{width:min(1100px,94%);margin:28px auto 70px}.hero{padding:38px 34px;border-radius:22px;color:#fff;background:linear-gradient(130deg,#172554,#2563eb);box-shadow:0 12px 28px #1e3a8a20}.hero h1{font-size:clamp(25px,4vw,39px);line-height:1.4;margin:0 0 8px}.hero p{color:#dbeafe;margin:4px 0}.hero .sub{font-size:17px}.toc{display:flex;flex-wrap:wrap;gap:9px;margin:18px 0 28px}.toc a{background:#fff;border:1px solid var(--line);border-radius:30px;padding:7px 13px;color:#1d4ed8;text-decoration:none;font-size:14px}.toc a:hover{background:var(--blue-bg)}section{scroll-margin-top:18px}h2{font-size:27px;margin:38px 0 14px}h3{font-size:21px;margin:24px 0 8px}h4{margin:0 0 8px}p{margin:9px 0}.card{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:24px;margin:16px 0;box-shadow:0 4px 15px #0f172a08}.tag{display:inline-block;padding:3px 12px;border-radius:30px;background:var(--green-bg);color:var(--green);font-weight:bold;font-size:13px}.note,.warning{padding:13px 16px;border-radius:10px;margin:15px 0}.note{background:var(--blue-bg);border-right:4px solid var(--blue)}.warning{background:var(--orange-bg);border-right:4px solid var(--orange)}ul,ol{padding-right:25px}li{margin:5px 0}pre{direction:ltr;text-align:left;white-space:pre;overflow:auto;background:var(--code);color:var(--code-ink);padding:18px;border-radius:12px;font:14px/1.7 Consolas,Monaco,monospace;margin:12px 0}code{font-family:Consolas,Monaco,monospace;direction:ltr;unicode-bidi:embed}.diagram{background:#f8fafc;border:1px dashed #cbd5e1;border-radius:14px;padding:18px;margin:16px 0;display:grid;justify-items:center;gap:10px}.node{width:min(100%,430px);padding:12px;border:1px solid #bfdbfe;background:#fff;border-radius:10px;text-align:center;font-weight:bold}.node small{display:block;color:var(--muted);font-weight:normal}.arrow{font-size:23px;color:#64748b;line-height:1}.cols2,.cols3{display:grid;gap:12px;width:100%}.cols2{grid-template-columns:repeat(2,minmax(0,1fr))}.cols3{grid-template-columns:repeat(3,minmax(0,1fr))}.mini{padding:12px;background:var(--blue-bg);border-radius:10px;text-align:center;font-weight:bold}.mini.green{background:var(--green-bg)}.family{border:1px solid var(--line);border-radius:12px;padding:14px}.family .cols2{font-size:13px}.family .mini{font-size:13px}table{border-collapse:collapse;width:100%;margin:14px 0;background:#fff}th,td{border:1px solid var(--line);padding:11px;text-align:right;vertical-align:top}th{background:var(--blue-bg)}.quiz-q{border-top:1px solid var(--line);padding:17px 0}.quiz-q:first-of-type{border-top:0}.opts{display:grid;gap:8px;margin-top:10px}.opts label{display:flex;align-items:center;gap:9px;padding:9px 12px;border:1px solid var(--line);border-radius:9px;cursor:pointer}.opts label:hover{background:#f8fafc}.feedback{padding:10px 12px;border-radius:9px;margin-top:9px}.good{background:var(--green-bg);color:#166534}.bad{background:#fef2f2;color:#991b1b}button{border:0;border-radius:10px;padding:11px 20px;background:var(--blue);color:#fff;font-weight:bold;font-size:15px;cursor:pointer;margin:8px 0}button.alt{background:#e2e8f0;color:var(--ink)}button:disabled{opacity:.5;cursor:not-allowed}.score{font-size:21px;font-weight:bold;color:var(--green);margin-top:10px}.footer{text-align:center;color:var(--muted);font-size:13px;margin-top:35px}
+@media(max-width:720px){.hero{padding:25px 20px}.card{padding:17px}h2{font-size:23px}.cols2,.cols3{grid-template-columns:1fr}pre{font-size:12px}table{font-size:13px}th,td{padding:8px}}
+@media print{body{background:#fff}.wrap{width:100%;margin:0}.hero{box-shadow:none;print-color-adjust:exact}.card{box-shadow:none;break-inside:avoid}.toc,button{display:none}pre{white-space:pre-wrap;break-inside:avoid}}
+</style>
+</head>
+<body>
+<main class="wrap">
+<header class="hero">
+<h1>شرح 3 Factory Design Patterns في C#</h1>
+<p class="sub">Simple Factory · Factory Method · Abstract Factory</p>
+<p>شرح من الصفر وبالتفصيل، بأمثلة عملية من C# وE-commerce وASP.NET Core، مع مقارنة واختبار تفاعلي.</p>
+</header>
+<nav class="toc" aria-label="محتويات الصفحة">
+<a href="#problem">المشكلة الأساسية</a><a href="#simple">Simple Factory</a><a href="#method">Factory Method</a><a href="#abstract">Abstract Factory</a><a href="#compare">المقارنة</a><a href="#aspnet">ASP.NET Core</a><a href="#when">إمتى أستخدم كل واحدة؟</a><a href="#quiz">اختبر فهمك</a>
+</nav>
+
+<section id="problem">
+<h2>أولًا: نفهم المشكلة اللي الـ Factory بتحلها</h2>
+<div class="card">
+<p>تخيل إن عندك <b>Order Service</b> في مشروع E-commerce، والمسؤول عن إرسال إشعار للعميل بعد ما يعمل Order. عندك 3 طرق للإشعار:</p>
+<ul><li>Email</li><li>SMS</li><li>WhatsApp</li></ul>
+<p>ممكن تكتب الكود بالشكل ده:</p>
+<pre><code>public class OrderService
+{
+    public void PlaceOrder(string notificationType)
+    {
+        if (notificationType == "Email")
+        {
+            var email = new EmailNotification();
+            email.Send();
+        }
+        else if (notificationType == "SMS")
+        {
+            var sms = new SmsNotification();
+            sms.Send();
+        }
+        else if (notificationType == "WhatsApp")
+        {
+            var whatsapp = new WhatsAppNotification();
+            whatsapp.Send();
+        }
+    }
+}</code></pre>
+<p>الكود شغال، لكن عندنا مشاكل:</p>
+<ol>
+<li><code>OrderService</code> مسؤول عن تنفيذ الـ Order وعن إنشاء أنواع الإشعارات.</li>
+<li>كل ما نضيف نوع جديد، لازم نعدل <code>OrderService</code>.</li>
+<li>عندنا ارتباط قوي (Tight Coupling) بين <code>OrderService</code> والـ Classes الخاصة بالإشعارات.</li>
+<li>صعب نختبر <code>OrderService</code> بشكل مستقل.</li>
+</ol>
+<div class="note"><b>الهدف:</b> نخلي <code>OrderService</code> يتعامل مع Interface بدل ما يعرف كل Class بيتم إنشاؤه إزاي. يعني نفصل عملية إنشاء الـ Objects عن الكود اللي بيستخدمها.</div>
+</div>
+</section>
+
+<section id="simple">
+<h2>1. Simple Factory</h2><span class="tag">Class واحدة مسؤولة عن إنشاء Objects</span>
+<div class="card">
+<p>الـ Simple Factory عبارة عن Class بنحط فيها منطق إنشاء الـ Objects، والـ Client بيطلب منها الـ Object اللي محتاجه. بدل ما <code>OrderService</code> يعمل <code>new EmailNotification()</code> بنفسه، هنخلي Factory هي اللي تعمل كده.</p>
+<h3>الخطوة الأولى: نعمل Interface</h3>
+<pre><code>public interface INotification
+{
+    void Send();
+}</code></pre>
+<p>كل أنواع الإشعارات هتطبق الـ Interface دي.</p>
+<h3>الخطوة الثانية: نعمل Implementations</h3>
+<pre><code>public class EmailNotification : INotification
+{
+    public void Send()
+    {
+        Console.WriteLine("Sending Email...");
+    }
+}</code></pre>
+<pre><code>public class SmsNotification : INotification
+{
+    public void Send()
+    {
+        Console.WriteLine("Sending SMS...");
+    }
+}</code></pre>
+<pre><code>public class WhatsAppNotification : INotification
+{
+    public void Send()
+    {
+        Console.WriteLine("Sending WhatsApp...");
+    }
+}</code></pre>
+<h3>الخطوة الثالثة: نعمل Simple Factory</h3>
+<pre><code>public class NotificationFactory
+{
+    public static INotification Create(string type)
+    {
+        switch (type)
+        {
+            case "Email":
+                return new EmailNotification();
+
+            case "SMS":
+                return new SmsNotification();
+
+            case "WhatsApp":
+                return new WhatsAppNotification();
+
+            default:
+                throw new ArgumentException("Invalid notification type");
+        }
+    }
+}</code></pre>
+<p><b>خلي بالك:</b> الـ Factory بترجع <code>INotification</code> مش <code>EmailNotification</code> أو <code>SmsNotification</code>.</p>
+<p>ليه؟ لأن كل الـ Classes بتطبق نفس الـ Interface، وبالتالي الـ Client مش محتاج يعرف نوع الـ Object الحقيقي.</p>
+<h3>الخطوة الرابعة: نستخدم الـ Factory في OrderService</h3>
+<pre><code>public class OrderService
+{
+    public void PlaceOrder(string notificationType)
+    {
+        INotification notification =
+            NotificationFactory.Create(notificationType);
+
+        notification.Send();
+    }
+}</code></pre>
+<p>دلوقتي إيه اللي حصل؟</p>
+<div class="diagram">
+<div class="node">OrderService<small>يطلب Notification من الـ Factory</small></div><div class="arrow">↓</div>
+<div class="node">NotificationFactory<small>تقرر أنهي Object يتم إنشاؤه</small></div><div class="arrow">↓</div>
+<div class="cols3"><div class="mini">Email</div><div class="mini">SMS</div><div class="mini">WhatsApp</div></div>
+</div>
+<h3>إيه اللي اتحسن؟</h3>
+<ul><li><code>OrderService</code> مش مسؤول عن إنشاء الـ Objects.</li><li>منطق الإنشاء أصبح في مكان واحد.</li><li>التعامل بقى من خلال Interface.</li></ul>
+<h3>لكن فيه مشكلة لسه موجودة</h3>
+<p>كل ما نضيف Notification جديدة، لازم نعدل <code>NotificationFactory</code> ونضيف Case جديدة في الـ Switch. وده معناه إن الـ Factory نفسها بتتغير كل ما نضيف نوع جديد. وهنا نيجي للمرحلة التانية.</p>
+<div class="warning"><b>ملحوظة مصطلحية:</b> Simple Factory أسلوب شائع لتنظيم إنشاء الـ Objects، لكنه مش واحد من الـ GoF Design Patterns الرسمية المعروفة باسم Factory Method وAbstract Factory.</div>
+</div>
+</section>
+
+<section id="method">
+<h2>2. Factory Method</h2><span class="tag">الـ Subclasses هي اللي تقرر هتنشئ أنهي Object</span>
+<div class="card">
+<p>خلينا نفتكر المشكلة في Simple Factory: كل ما نضيف نوع جديد بنعدل الـ Factory. الـ Factory Method بيحل المشكلة دي عن طريق استخدام الـ Inheritance والـ Polymorphism.</p>
+<p>بدل ما يكون عندنا Factory واحدة فيها Switch، هنعمل Factory Base Class، وكل نوع هيكون له Factory خاصة بيه.</p>
+<h3>الخطوة الأولى: الـ Product Interface</h3>
+<pre><code>public interface INotification
+{
+    void Send();
+}</code></pre>
+<h3>الخطوة الثانية: المنتجات المختلفة</h3>
+<pre><code>public class EmailNotification : INotification
+{
+    public void Send()
+    {
+        Console.WriteLine("Sending Email...");
+    }
+}</code></pre>
+<pre><code>public class SmsNotification : INotification
+{
+    public void Send()
+    {
+        Console.WriteLine("Sending SMS...");
+    }
+}</code></pre>
+<h3>الخطوة الثالثة: نعمل Abstract Creator</h3>
+<pre><code>public abstract class NotificationCreator
+{
+    public abstract INotification CreateNotification();
+
+    public void SendNotification()
+    {
+        INotification notification = CreateNotification();
+        notification.Send();
+    }
+}</code></pre>
+<p>ركز معايا هنا. عندنا Method اسمها:</p>
+<pre><code>public abstract INotification CreateNotification();</code></pre>
+<p>دي اسمها <b>Factory Method</b>. يعني الـ Base Class بتقول: أنا محتاجة حد ينشئلي Notification، لكن مش هحدد هتكون Email ولا SMS. الـ Subclasses هي اللي هتحدد.</p>
+<p>وفي نفس الوقت عندنا:</p>
+<pre><code>public void SendNotification()
+{
+    INotification notification = CreateNotification();
+    notification.Send();
+}</code></pre>
+<p>الـ Base Class بتستخدم الـ Object، من غير ما تعرف نوعه الحقيقي.</p>
+<h3>الخطوة الرابعة: نعمل Concrete Creators</h3>
+<p>Factory خاصة بالـ Email:</p>
+<pre><code>public class EmailNotificationCreator : NotificationCreator
+{
+    public override INotification CreateNotification()
+    {
+        return new EmailNotification();
+    }
+}</code></pre>
+<p>Factory خاصة بالـ SMS:</p>
+<pre><code>public class SmsNotificationCreator : NotificationCreator
+{
+    public override INotification CreateNotification()
+    {
+        return new SmsNotification();
+    }
+}</code></pre>
+<h3>الخطوة الخامسة: الاستخدام</h3>
+<pre><code>NotificationCreator creator = new EmailNotificationCreator();
+creator.SendNotification();</code></pre>
+<p>الـ Output:</p><pre><code>Sending Email...</code></pre>
+<p>ولو عايز SMS:</p>
+<pre><code>NotificationCreator creator = new SmsNotificationCreator();
+creator.SendNotification();</code></pre>
+<p>الـ Output:</p><pre><code>Sending SMS...</code></pre>
+<h3>نفهم الـ Factory Method بصريًا</h3>
+<div class="diagram">
+<div class="node">NotificationCreator (Abstract)<small>يحتوي على CreateNotification() وSendNotification()</small></div><div class="arrow">↓</div>
+<div class="cols2">
+<div class="family"><b>EmailNotificationCreator</b><div class="arrow">↓</div><div class="mini">EmailNotification</div></div>
+<div class="family"><b>SmsNotificationCreator</b><div class="arrow">↓</div><div class="mini">SmsNotification</div></div>
+</div>
+</div>
+<h3>إيه الفرق بين Simple Factory وFactory Method؟</h3>
+<table><thead><tr><th>Simple Factory</th><th>Factory Method</th></tr></thead><tbody>
+<tr><td>Factory واحدة</td><td>عدة Concrete Creators</td></tr>
+<tr><td>غالبًا بتستخدم Switch</td><td>بتستخدم Inheritance وOverride</td></tr>
+<tr><td>إنشاء الـ Object داخل Factory واحدة</td><td>الـ Subclass بتحدد نوع الـ Object</td></tr>
+<tr><td>إضافة نوع جديد تتطلب غالبًا تعديل الـ Factory</td><td>ممكن إضافة Creator جديد بدل تعديل الموجود</td></tr>
+</tbody></table>
+<div class="note"><b>ملحوظة مهمة:</b> Factory Method مش معناها إننا عملنا Method اسمها Factory وخلاص. الفكرة الأساسية إن الـ Base Creator يعرّف Method لإنشاء المنتج، والـ Subclasses تعمل Override ليها وتحدد المنتج المطلوب.</div>
+</div>
+</section>
+
+<section id="abstract">
+<h2>3. Abstract Factory</h2><span class="tag">إنشاء عائلات من Objects مرتبطة ببعض</span>
+<div class="card">
+<p>ده أهم اختلاف بين Factory Method وAbstract Factory. خلينا نستخدم مثال من E-commerce.</p>
+<p>تخيل إن عندك Application بيدعم نوعين من أنظمة الدفع: <b>Stripe</b> و<b>PayPal</b>. وكل نظام دفع عنده حاجتين:</p>
+<ol><li><b>Payment Processor:</b> المسؤول عن تنفيذ عملية الدفع.</li><li><b>Payment Validator:</b> المسؤول عن التحقق من بيانات الدفع.</li></ol>
+<p>يعني عندنا عائلتين من الـ Objects:</p>
+<div class="cols2">
+<div class="family"><h4>Stripe Family</h4><div class="cols2"><div class="mini">StripePaymentProcessor<small>تنفيذ الدفع</small></div><div class="mini">StripePaymentValidator<small>التحقق من الدفع</small></div></div></div>
+<div class="family"><h4>PayPal Family</h4><div class="cols2"><div class="mini green">PayPalPaymentProcessor<small>تنفيذ الدفع</small></div><div class="mini green">PayPalPaymentValidator<small>التحقق من الدفع</small></div></div></div>
+</div>
+<p>المشكلة هنا إننا مش عايزين ننشئ Processor من Stripe ونستخدم معاه Validator من PayPal بالغلط. عايزين Factory تضمن إننا ننشئ Objects من نفس العائلة. وده بالضبط دور Abstract Factory.</p>
+<h3>الخطوة الأولى: نعمل Interfaces للـ Products</h3>
+<p>أول Product مسؤول عن الدفع:</p>
+<pre><code>public interface IPaymentProcessor
+{
+    void Pay(decimal amount);
+}</code></pre>
+<p>ثاني Product مسؤول عن التحقق:</p>
+<pre><code>public interface IPaymentValidator
+{
+    bool Validate();
+}</code></pre>
+<h3>الخطوة الثانية: نعمل Implementations</h3>
+<p><b>Stripe:</b></p>
+<pre><code>public class StripePaymentProcessor : IPaymentProcessor
+{
+    public void Pay(decimal amount)
+    {
+        Console.WriteLine($"Stripe paid: {amount}");
+    }
+}</code></pre>
+<pre><code>public class StripePaymentValidator : IPaymentValidator
+{
+    public bool Validate()
+    {
+        Console.WriteLine("Validating Stripe payment");
+        return true;
+    }
+}</code></pre>
+<p><b>PayPal:</b></p>
+<pre><code>public class PayPalPaymentProcessor : IPaymentProcessor
+{
+    public void Pay(decimal amount)
+    {
+        Console.WriteLine($"PayPal paid: {amount}");
+    }
+}</code></pre>
+<pre><code>public class PayPalPaymentValidator : IPaymentValidator
+{
+    public bool Validate()
+    {
+        Console.WriteLine("Validating PayPal payment");
+        return true;
+    }
+}</code></pre>
+<h3>الخطوة الثالثة: نعمل Abstract Factory</h3>
+<p>في Factory Method كان عندنا Method واحدة لإنشاء Product. لكن في Abstract Factory ممكن يكون عندنا أكتر من Factory Method، كل واحدة مسؤولة عن إنشاء Product مختلف.</p>
+<pre><code>public interface IPaymentFactory
+{
+    IPaymentProcessor CreatePaymentProcessor();
+    IPaymentValidator CreatePaymentValidator();
+}</code></pre>
+<p>الـ Interface دي بتقول: أي Factory هتطبقها لازم توفر طريقتين لإنشاء:</p>
+<ul><li>Payment Processor</li><li>Payment Validator</li></ul>
+<h3>الخطوة الرابعة: نعمل Concrete Factories</h3>
+<p><b>Stripe Factory:</b></p>
+<pre><code>public class StripePaymentFactory : IPaymentFactory
+{
+    public IPaymentProcessor CreatePaymentProcessor()
+    {
+        return new StripePaymentProcessor();
+    }
+
+    public IPaymentValidator CreatePaymentValidator()
+    {
+        return new StripePaymentValidator();
+    }
+}</code></pre>
+<p><b>PayPal Factory:</b></p>
+<pre><code>public class PayPalPaymentFactory : IPaymentFactory
+{
+    public IPaymentProcessor CreatePaymentProcessor()
+    {
+        return new PayPalPaymentProcessor();
+    }
+
+    public IPaymentValidator CreatePaymentValidator()
+    {
+        return new PayPalPaymentValidator();
+    }
+}</code></pre>
+<p>لاحظ إن كل Factory بتنشئ عائلة كاملة متوافقة مع بعضها.</p>
+<h3>الخطوة الخامسة: نستخدم Abstract Factory</h3>
+<p>نعمل Payment Service:</p>
+<pre><code>public class PaymentService
+{
+    private readonly IPaymentProcessor _processor;
+    private readonly IPaymentValidator _validator;
+
+    public PaymentService(IPaymentFactory factory)
+    {
+        _processor = factory.CreatePaymentProcessor();
+        _validator = factory.CreatePaymentValidator();
+    }
+
+    public void ProcessPayment(decimal amount)
+    {
+        if (!_validator.Validate())
+        {
+            throw new Exception("Invalid payment");
+        }
+
+        _processor.Pay(amount);
+    }
+}</code></pre>
+<p>لاحظ إن <code>PaymentService</code> مش عارف هل بيستخدم Stripe أو PayPal. هو بيتعامل مع Interfaces فقط.</p>
+<p><b>الاستخدام مع Stripe:</b></p>
+<pre><code>IPaymentFactory factory = new StripePaymentFactory();
+var paymentService = new PaymentService(factory);
+paymentService.ProcessPayment(1000);</code></pre>
+<p><b>الاستخدام مع PayPal:</b></p>
+<pre><code>IPaymentFactory factory = new PayPalPaymentFactory();
+var paymentService = new PaymentService(factory);
+paymentService.ProcessPayment(1000);</code></pre>
+<p>في الحالتين، <code>PaymentService</code> نفسه لم يتغير.</p>
+</div>
+</section>
+
+<section id="compare">
+<h2>الفرق الجوهري بين الثلاثة</h2>
+<div class="card">
+<p>دي أهم نقطة محتاج تكون فاهمها كويس:</p>
+<div class="cols3">
+<div class="family"><b>1. Simple Factory</b><h3>منتج واحد من اختيارات متعددة</h3><p>Factory واحدة تختار المنتج المطلوب.</p><b>مثال:</b><p>Email أو SMS أو WhatsApp.</p></div>
+<div class="family"><b>2. Factory Method</b><h3>الـ Subclass تحدد المنتج</h3><p>كل Concrete Creator مسؤول عن إنشاء نوع معين من المنتجات.</p><b>مثال:</b><p>EmailNotificationCreator وSmsNotificationCreator.</p></div>
+<div class="family"><b>3. Abstract Factory</b><h3>عائلة كاملة من المنتجات</h3><p>Factory واحدة تنشئ مجموعة Objects مترابطة ومتوافقة.</p><b>مثال:</b><p>Stripe Processor + Stripe Validator.</p></div>
+</div>
+<h3>جدول المقارنة الشامل</h3>
+<table><thead><tr><th>المقارنة</th><th>Simple Factory</th><th>Factory Method</th><th>Abstract Factory</th></tr></thead><tbody>
+<tr><td>عدد المنتجات</td><td>منتج واحد في كل مرة</td><td>منتج واحد لكل Factory Method</td><td>مجموعة منتجات</td></tr>
+<tr><td>آلية الإنشاء</td><td>Switch / If</td><td>Inheritance</td><td>Composition غالبًا مع Interfaces</td></tr>
+<tr><td>الهدف</td><td>تجميع منطق الإنشاء</td><td>تفويض قرار الإنشاء للـ Subclasses</td><td>إنشاء عائلات متوافقة</td></tr>
+<tr><td>التعقيد</td><td>بسيط</td><td>متوسط</td><td>أعلى نسبيًا</td></tr>
+</tbody></table>
+</div>
+</section>
+
+<section id="aspnet">
+<h2>رابعًا: إزاي نستخدم الكلام ده في ASP.NET Core؟</h2>
+<div class="card">
+<p>دي نقطة مهمة جدًا لأنك هتقابل الـ Factories في مشاريع .NET الحقيقية.</p>
+<p>في ASP.NET Core عندنا Dependency Injection Container، وممكن نسجل الـ Implementations بالشكل ده:</p>
+<pre><code>builder.Services.AddScoped&lt;IPaymentFactory, StripePaymentFactory&gt;();
+builder.Services.AddScoped&lt;PaymentService&gt;();</code></pre>
+<p>وبالتالي لما تطلب <code>PaymentService</code>، الـ DI هتعمل Inject للـ <code>StripePaymentFactory</code> تلقائيًا.</p>
+<p>لكن تخيل إنك عايز تختار بين Stripe وPayPal حسب إعدادات الشركة أو الطلب. هنا ممكن تستخدم Factory مع DI:</p>
+<pre><code>public class PaymentFactory : IPaymentFactory
+{
+    private readonly IServiceProvider _serviceProvider;
+
+    public PaymentFactory(IServiceProvider serviceProvider)
+    {
+        _serviceProvider = serviceProvider;
+    }
+
+    public IPaymentProcessor CreatePaymentProcessor()
+    {
+        // اختيار الـ Processor حسب الإعدادات
+        return _serviceProvider
+            .GetRequiredService&lt;StripePaymentProcessor&gt;();
+    }
+
+    public IPaymentValidator CreatePaymentValidator()
+    {
+        return _serviceProvider
+            .GetRequiredService&lt;StripePaymentValidator&gt;();
+    }
+}</code></pre>
+<p>وتسجل الـ Services:</p>
+<pre><code>builder.Services.AddScoped&lt;StripePaymentProcessor&gt;();
+builder.Services.AddScoped&lt;StripePaymentValidator&gt;();
+builder.Services.AddScoped&lt;IPaymentFactory, PaymentFactory&gt;();</code></pre>
+<div class="warning"><b>ملحوظة مهمة:</b> المثال ده للتوضيح فقط، والاختيار هنا ثابت على Stripe. في مشروع Production ممكن تستخدم إعدادات أو Strategy أو Keyed Services لاختيار الـ Provider، وتتجنب استخدام <code>IServiceProvider</code> بشكل عشوائي في كل مكان (Service Locator).</div>
+</div>
+</section>
+
+<section id="when">
+<h2>خامسًا: إمتى أستخدم كل Pattern؟</h2>
+<div class="card">
+<h3>استخدم Simple Factory لما:</h3>
+<ul><li>عندك عدد قليل من الأنواع.</li><li>عندك مكان مركزي مسؤول عن الإنشاء.</li><li>عايز حل بسيط بدون تعقيد الـ Inheritance.</li></ul>
+<h3>استخدم Factory Method لما:</h3>
+<ul><li>عندك أنواع مختلفة من المنتجات.</li><li>عايز كل نوع يكون له Creator خاص بيه.</li><li>عايز تضيف أنواع جديدة بدون تعديل الـ Creator الأساسي.</li></ul>
+<h3>استخدم Abstract Factory لما:</h3>
+<ul><li>عندك مجموعات من المنتجات مرتبطة ببعض.</li><li>لازم المنتجات اللي بتتعمل مع بعض تكون متوافقة.</li><li>عندك Providers أو Platforms مختلفة، وكل واحدة بتوفر مجموعة Implementations.</li></ul>
+<h3>أمثلة إضافية</h3>
+<table><thead><tr><th>السيناريو</th><th>Pattern مناسب</th></tr></thead><tbody>
+<tr><td>إنشاء أنواع مختلفة من Notifications</td><td>Simple Factory</td></tr>
+<tr><td>إنشاء أنواع مختلفة من Documents عن طريق Creators</td><td>Factory Method</td></tr>
+<tr><td>إنشاء UI Components لعائلات Windows وMac</td><td>Abstract Factory</td></tr>
+<tr><td>إنشاء عائلة خدمات Payment مختلفة حسب Provider</td><td>Abstract Factory</td></tr>
+</tbody></table>
+</div>
+</section>
+
+<section id="quiz">
+<h2>سادسًا: اختبر فهمك</h2>
+<div class="card" id="quiz-box">
+<p>عايز أتأكد إنك فهمت الفرق، جرب تجاوب على الأسئلة دي. اختار إجابة لكل سؤال، وبعدها اضغط «تصحيح الإجابات».</p>
+<div class="quiz-q" data-answer="0" data-explain="لأن Factory واحدة بتختار وتُنشئ Product واحد من عدة أنواع.">
+<b>1. عندك NotificationFactory فيها Switch بتنشئ Email أو SMS أو WhatsApp. ده مثال على إيه؟</b>
+<div class="opts"><label><input type="radio" name="q1" value="0"> Simple Factory</label><label><input type="radio" name="q1" value="1"> Factory Method</label><label><input type="radio" name="q1" value="2"> Abstract Factory</label></div><div class="feedback" hidden></div>
+</div>
+<div class="quiz-q" data-answer="1" data-explain="لأن الـ Subclasses هي اللي بتحدد المنتج عن طريق Override للـ Factory Method.">
+<b>2. عندك Base Creator فيه CreateDocument()، وكل Subclass بتعمل Override وترجع نوع Document مختلف. ده إيه؟</b>
+<div class="opts"><label><input type="radio" name="q2" value="0"> Simple Factory</label><label><input type="radio" name="q2" value="1"> Factory Method</label><label><input type="radio" name="q2" value="2"> Abstract Factory</label></div><div class="feedback" hidden></div>
+</div>
+<div class="quiz-q" data-answer="2" data-explain="لأن كل Factory بتنشىء عائلة من المنتجات المترابطة والمتوافقة.">
+<b>3. عندك StripeFactory بتنشىء StripeProcessor وStripeValidator، وعندك PayPalFactory بتنشىء PayPalProcessor وPayPalValidator. ده إيه؟</b>
+<div class="opts"><label><input type="radio" name="q3" value="0"> Simple Factory</label><label><input type="radio" name="q3" value="1"> Factory Method</label><label><input type="radio" name="q3" value="2"> Abstract Factory</label></div><div class="feedback" hidden></div>
+</div>
+<button id="check">تصحيح الإجابات</button><button id="reset" class="alt" hidden>إعادة الاختبار</button><div id="result" aria-live="polite"></div>
+</div>
+</section>
+
+<section>
+<h2>الخلاصة والنصيحة</h2>
+<div class="card">
+<p>متَحفظش شكل الكود بس. ركز على الأسئلة دي في كل Pattern:</p>
+<ol><li>مين المسؤول عن إنشاء الـ Object؟</li><li>مين بيحدد نوع الـ Object؟</li><li>هل بننشئ Object واحد ولا عائلة Objects؟</li></ol>
+<p><b>لو عرفت تجاوب على التلات أسئلة دول، هتعرف تفرق بين Simple Factory وFactory Method وAbstract Factory بسهولة.</b></p>
+</div>
+</section>
+<footer class="footer">ملف تعليمي — C# / OOP / Design Patterns / ASP.NET Core</footer>
+</main>
+<script>
+const checkBtn=document.getElementById('check'),resetBtn=document.getElementById('reset'),result=document.getElementById('result');
+checkBtn.addEventListener('click',()=>{
+ const qs=[...document.querySelectorAll('.quiz-q')];let score=0,missing=false;
+ qs.forEach(q=>{
+  const chosen=q.querySelector('input:checked'),fb=q.querySelector('.feedback');
+  fb.hidden=false;fb.className='feedback';
+  if(!chosen){missing=true;fb.classList.add('bad');fb.textContent='لم تختر إجابة. '+q.dataset.explain;return;}
+  if(chosen.value===q.dataset.answer){score++;fb.classList.add('good');fb.textContent='إجابة صحيحة! '+q.dataset.explain;}
+  else{fb.classList.add('bad');fb.textContent='إجابة غير صحيحة. '+q.dataset.explain;}
+ });
+ result.className='score';result.textContent=`نتيجتك: ${score} من ${qs.length}`+(missing?' — راجع الأسئلة اللي ما جاوبتش عليها.':'');
+ checkBtn.hidden=true;resetBtn.hidden=false;
+});
+resetBtn.addEventListener('click',()=>{
+ document.querySelectorAll('.quiz-q input').forEach(x=>x.checked=false);
+ document.querySelectorAll('.feedback').forEach(x=>{x.hidden=true;x.textContent='';x.className='feedback';});
+ result.textContent='';checkBtn.hidden=false;resetBtn.hidden=true;
+});
+</script>
+</body>
+</html>
