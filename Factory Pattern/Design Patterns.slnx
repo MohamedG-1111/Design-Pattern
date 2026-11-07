@@ -1,5 +1,6 @@
 <Solution>
   <Project Path="../Adapter Design/Adapter Design.csproj" Id="83703cf8-8367-4db9-989d-3c2dba32906a" />
   <Project Path="../Decorator Design pattern/Decorator Design pattern.csproj" Id="b91628aa-8e9c-4025-8c92-854778193f63" />
+  <Project Path="../strategy-pattern/strategy-pattern.csproj" Id="72174808-4cad-4f3f-9a67-0f22b2beba80" />
   <Project Path="Factory Pattern.csproj" />
 </Solution>

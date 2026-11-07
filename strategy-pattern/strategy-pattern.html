@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Strategy Design Pattern بالمصري</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700&display=swap">
+<style>
+:root{--bg:#f7f8f6;--surface:#fff;--ink:#1b2a2f;--muted:#5b6b70;--line:#d9e0dd;--accent:#0f6b6b;--accent-soft:#e1f1ef;--code-bg:#14232b;--code-ink:#e6f1ee;--ok:#1d7a46;--bad:#b3362b;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#10191d;--surface:#172429;--ink:#e6efed;--muted:#9bb0b0;--line:#2a3b41;--accent:#5cc7bd;--accent-soft:#17353a;--code-bg:#0a1216;--code-ink:#e6f1ee;--ok:#5fd18d;--bad:#ff8a7d;color-scheme:dark}}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans Arabic",Tahoma,Arial,sans-serif;line-height:1.9;font-size:17px}
+.wrap{max-width:780px;margin:0 auto;padding:0 20px 80px}
+header{padding:56px 0 28px;border-bottom:2px solid var(--accent)}
+header h1{font-size:2.3rem;line-height:1.3;margin:0 0 10px}
+header p{margin:0;color:var(--muted)}
+nav{display:flex;gap:10px;flex-wrap:wrap;margin:22px 0 0}
+nav a{padding:6px 14px;border:1px solid var(--line);border-radius:999px;color:var(--ink);text-decoration:none;font-size:.9rem}
+nav a:hover,nav a:focus-visible{background:var(--accent-soft);border-color:var(--accent)}
+.part{margin-top:56px}
+.part>h2{font-size:1.7rem;margin:0 0 6px;color:var(--accent)}
+.part>.sub{color:var(--muted);margin:0 0 20px}
+h3{font-size:1.25rem;margin:34px 0 8px;padding-inline-start:12px;border-inline-start:4px solid var(--accent)}
+h4{font-size:1.05rem;margin:22px 0 4px}
+p{margin:10px 0}
+ul,ol{padding-inline-start:26px}
+li{margin:4px 0}
+code{direction:ltr;unicode-bidi:isolate;font-family:Consolas,Menlo,monospace;font-size:.9em;background:var(--accent-soft);padding:1px 6px;border-radius:4px}
+pre{direction:ltr;text-align:left;background:var(--code-bg);color:var(--code-ink);padding:16px 18px;border-radius:8px;overflow-x:auto;line-height:1.6;font-size:.88rem;margin:12px 0}
+pre code{background:none;padding:0;font-size:inherit}
+pre.out{border-inline-start:4px solid var(--accent);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-left:4px solid var(--accent)}
+.tag{display:inline-block;font-size:.8rem;color:var(--muted);margin-bottom:-6px}
+.note{background:var(--accent-soft);border-inline-start:4px solid var(--accent);padding:10px 16px;border-radius:6px;margin:16px 0}
+.table-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin:14px 0;background:var(--surface)}
+th,td{border:1px solid var(--line);padding:9px 12px;text-align:right}
+th{background:var(--accent-soft)}
+.diagram{direction:ltr;display:flex;flex-direction:column;align-items:center;gap:6px;margin:18px 0;font-size:.95rem}
+.box{border:2px solid var(--accent);border-radius:8px;padding:6px 16px;background:var(--surface);text-align:center}
+.arrow{color:var(--muted);font-size:.85rem}
+.row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.row .box{min-width:120px;font-size:.9rem}
+.quiz{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:18px 20px;margin:26px 0}
+.quiz h4{margin-top:0}
+.quiz button.opt{display:block;width:100%;text-align:right;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 14px;margin:8px 0;cursor:pointer}
+.quiz button.opt:hover:not(:disabled){border-color:var(--accent)}
+.quiz button.opt:focus-visible,nav a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.quiz button.opt.ok{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 15%,var(--bg))}
+.quiz button.opt.bad{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 15%,var(--bg))}
+.fb{margin:10px 0 0;min-height:1.5em;font-weight:600}
+.takeaway{margin-top:30px;padding:16px 20px;border:2px solid var(--accent);border-radius:10px}
+.takeaway p{margin:4px 0}
+@media (max-width:520px){header h1{font-size:1.8rem}body{font-size:16px}}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Strategy Design Pattern</h1>
+  <p>شرح بالمصري، خطوة خطوة، بأمثلة C# عملية — وإزاي يفترق عن Factory و Adapter و Decorator.</p>
+  <nav>
+    <a href="#strategy">الجزء الأول: Strategy</a>
+    <a href="#factory">الجزء التاني: Strategy vs Factory</a>
+  </nav>
+</header>
+
+<!-- ===================== PART 1 ===================== -->
+<section class="part" id="strategy">
+<h2>الجزء الأول: Strategy Pattern من الصفر</h2>
+
+<h3>1. يعني إيه Strategy Pattern؟</h3>
+<p>كلمة Strategy معناها «استراتيجية» أو «طريقة».</p>
+<p>الفكرة ببساطة: عندنا عملية ممكن تتنفذ بأكتر من طريقة، وعايزين نقدر نغيّر الطريقة المستخدمة من غير ما نغيّر الكلاس الأساسي اللي بيستخدمها.</p>
+
+<h3>2. المشكلة اللي بنحلها</h3>
+<p>تخيل إن عندنا تطبيق توصيل طلبات، والعميل يقدر يختار طريقة حساب تكلفة الشحن:</p>
+<ul>
+  <li>الشحن العادي (Standard).</li>
+  <li>الشحن السريع (Express).</li>
+  <li>الشحن المجاني (Free).</li>
+</ul>
+<p>ممكن في البداية نكتب الكود بالشكل ده:</p>
+<pre><code>public class ShippingService
+{
+    public decimal CalculateShipping(string shippingType)
+    {
+        if (shippingType == "Standard")
+        {
+            return 30;
+        }
+        else if (shippingType == "Express")
+        {
+            return 60;
+        }
+        else if (shippingType == "Free")
+        {
+            return 0;
+        }
+
+        throw new Exception("Invalid shipping type");
+    }
+}</code></pre>
+<p>ونستخدمه كده:</p>
+<pre><code>var shippingService = new ShippingService();
+
+decimal cost = shippingService.CalculateShipping("Express");
+
+Console.WriteLine(cost);</code></pre>
+<pre class="out"><code>60</code></pre>
+
+<h3>3. إيه المشكلة في الكود ده؟</h3>
+<p>الكود شغال، لكن تخيل إن الشركة قررت تضيف:</p>
+<ul>
+  <li>Same Day Shipping.</li>
+  <li>International Shipping.</li>
+  <li>Weekend Shipping.</li>
+</ul>
+<p>هنضطر نرجع نعدّل <code>ShippingService</code> ونضيف شروط جديدة. وده مع الوقت هيعمل مشاكل:</p>
+<ol>
+  <li>الكلاس هيكبر جدًا.</li>
+  <li>كل طريقة شحن جديدة هتحتاج تعديل في نفس الكلاس.</li>
+  <li>احتمالية حدوث أخطاء في الطرق القديمة هتزيد.</li>
+  <li>الكلاس هيبقى مسؤول عن تفاصيل طرق شحن كتير.</li>
+</ol>
+<p>بدل ما نخلي <code>ShippingService</code> يعرف كل طرق الشحن، هنفصل كل طريقة في كلاس مستقل.</p>
+
+<h3>4. الحل باستخدام Strategy Pattern</h3>
+<p>الفكرة إننا هنعمل Interface يمثل الاستراتيجية المشتركة بين كل طرق الشحن.</p>
+
+<h4>الخطوة الأولى: إنشاء Interface</h4>
+<pre><code>public interface IShippingStrategy
+{
+    decimal CalculateShipping();
+}</code></pre>
+<div class="note">الـ Interface بيقول إن أي طريقة شحن لازم يكون عندها Method اسمها <code>CalculateShipping</code>، لكن مش بيحدد طريقة الحساب نفسها.</div>
+
+<h4>الخطوة الثانية: إنشاء الاستراتيجيات المختلفة</h4>
+<pre><code>public class StandardShipping : IShippingStrategy
+{
+    public decimal CalculateShipping() { return 30; }
+}
+
+public class ExpressShipping : IShippingStrategy
+{
+    public decimal CalculateShipping() { return 60; }
+}
+
+public class FreeShipping : IShippingStrategy
+{
+    public decimal CalculateShipping() { return 0; }
+}</code></pre>
+<p>دلوقتي كل طريقة شحن بقت موجودة في كلاس مستقل.</p>
+
+<h4>الخطوة الثالثة: الكلاس المسؤول عن استخدام الاستراتيجية</h4>
+<pre><code>public class ShippingService
+{
+    private readonly IShippingStrategy _shippingStrategy;
+
+    public ShippingService(IShippingStrategy shippingStrategy)
+    {
+        _shippingStrategy = shippingStrategy;
+    }
+
+    public decimal CalculateShipping()
+    {
+        return _shippingStrategy.CalculateShipping();
+    }
+}</code></pre>
+<p><b>أولًا:</b> <code>private readonly IShippingStrategy _shippingStrategy;</code> — إحنا بنقول إن <code>ShippingService</code> هيحتفظ باستراتيجية شحن. لكن استخدمنا Interface مش Class معين، يعني الكلاس مش فارق معاه الطريقة Standard ولا Express ولا Free.</p>
+<p><b>ثانيًا:</b> الـ Constructor — بنبعت طريقة الشحن من بره. يعني اللي بيعمل Object من <code>ShippingService</code> هو اللي بيحدد طريقة الشحن.</p>
+<p><b>ثالثًا:</b> <code>return _shippingStrategy.CalculateShipping();</code> — بننفذ الطريقة اللي اتبعتت لنا. لو اتبعت <code>ExpressShipping</code> هينفذ حساب الشحن السريع، ولو اتبعت <code>StandardShipping</code> هينفذ حساب الشحن العادي. وده جوهر الـ Strategy Pattern.</p>
+
+<h3>5. نجرب الكود</h3>
+<pre><code>class Program
+{
+    static void Main()
+    {
+        IShippingStrategy strategy = new ExpressShipping();
+
+        ShippingService shippingService =
+            new ShippingService(strategy);
+
+        decimal cost = shippingService.CalculateShipping();
+
+        Console.WriteLine($"Shipping Cost: {cost}");
+    }
+}</code></pre>
+<pre class="out"><code>Shipping Cost: 60</code></pre>
+<p>لو عايزين نغيّر طريقة الشحن، كل اللي هنعمله إننا نغيّر الاستراتيجية:</p>
+<pre><code>IShippingStrategy strategy = new StandardShipping();
+
+ShippingService shippingService =
+    new ShippingService(strategy);
+
+Console.WriteLine(shippingService.CalculateShipping());</code></pre>
+<pre class="out"><code>30</code></pre>
+<p>من غير ما نغيّر سطر واحد داخل <code>ShippingService</code>!</p>
+
+<h3>6. الصورة الكاملة للفكرة</h3>
+<div class="diagram" aria-label="رسم يوضح ShippingService بيستخدم IShippingStrategy وتنفذه ثلاث كلاسات">
+  <div class="box">ShippingService</div>
+  <div class="arrow">uses ▼</div>
+  <div class="box">IShippingStrategy<br><small>CalculateShipping()</small></div>
+  <div class="arrow">implemented by ▼</div>
+  <div class="row">
+    <div class="box">Standard<br><small>30</small></div>
+    <div class="box">Express<br><small>60</small></div>
+    <div class="box">Free<br><small>0</small></div>
+  </div>
+</div>
+<p>كل الاستراتيجيات بتنفذ نفس الـ Interface، لكن كل واحدة ليها طريقة تنفيذ مختلفة.</p>
+
+<h3>7. إمتى أستخدم Strategy Pattern؟</h3>
+<ul>
+  <li>يكون عندك أكتر من طريقة لتنفيذ نفس العملية.</li>
+  <li>تكون محتاج تغيّر طريقة التنفيذ حسب اختيار المستخدم.</li>
+  <li>تلاقي نفسك بتكرر <code>if / else</code> أو <code>switch</code> لاختيار سلوك مختلف.</li>
+  <li>عايز تضيف سلوك جديد من غير تعديل الكلاس الأساسي.</li>
+</ul>
+<p>أمثلة حقيقية في مشاريع .NET:</p>
+<ul>
+  <li>طرق الدفع: Cash / Visa / PayPal.</li>
+  <li>طرق الخصم: Percentage / Fixed Amount.</li>
+  <li>طرق حساب الضريبة.</li>
+  <li>طرق إرسال الإشعارات.</li>
+  <li>طرق حساب أسعار الشحن.</li>
+</ul>
+
+<h3>8. الفرق بين Strategy و Adapter و Decorator</h3>
+<div class="table-scroll"><table>
+  <thead><tr><th>Pattern</th><th>وظيفته</th></tr></thead>
+  <tbody>
+    <tr><td>Strategy</td><td>يغيّر طريقة تنفيذ العملية</td></tr>
+    <tr><td>Adapter</td><td>يخلّي واجهتين غير متوافقتين يشتغلوا مع بعض</td></tr>
+    <tr><td>Decorator</td><td>يضيف سلوك جديد لكائن موجود</td></tr>
+  </tbody>
+</table></div>
+
+<h3>9. اختبر فهمك</h3>
+<div class="quiz" data-correct="1">
+  <h4>عندنا تطبيق بيدعم طرق دفع مختلفة: Cash و Visa و PayPal. وعايزين نضيف طريقة دفع جديدة من غير ما نعدّل <code>PaymentService</code>. إيه أنسب حل؟</h4>
+  <button class="opt">نستخدم Inheritance فقط ونحط كل طرق الدفع في PaymentService.</button>
+  <button class="opt">نعمل IPaymentStrategy وكل طريقة دفع تنفذها في كلاس مستقل.</button>
+  <button class="opt">نعمل Switch كبير داخل PaymentService.</button>
+  <p class="fb" aria-live="polite"></p>
+</div>
+
+<div class="takeaway"><p><b>الخلاصة:</b> بدل ما الكلاس يعرف كل الطرق الممكنة لتنفيذ العملية، بنخليه يعتمد على Interface، ونبعتله الطريقة اللي عايزينه يستخدمها. ده هو الـ Strategy Pattern.</p></div>
+</section>
+
+<!-- ===================== PART 2 ===================== -->
+<section class="part" id="factory">
+<h2>الجزء التاني: الفرق بين Strategy و Factory</h2>
+<p class="sub">الـ Strategy ممكن تحس إنه شبه الـ Simple Factory والـ Factory Method، لأن التلاتة فيهم Interface وكذا Class بيعملوا Implement ليه. لكن الفرق الأساسي مش في شكل الكود، الفرق في المشكلة اللي كل Pattern بيحلها. هنستخدم مثال طرق الدفع.</p>
+
+<h3>1. Simple Factory – أنا عايز أنشئ Object</h3>
+<pre><code>public interface IPayment
+{
+    void Pay(decimal amount);
+}
+
+public class CashPayment : IPayment
+{
+    public void Pay(decimal amount) { Console.WriteLine("Cash Payment"); }
+}
+
+public class VisaPayment : IPayment
+{
+    public void Pay(decimal amount) { Console.WriteLine("Visa Payment"); }
+}</code></pre>
+<p>الـ Simple Factory مسؤولة عن إنشاء الـ Object المناسب:</p>
+<pre><code>public class PaymentFactory
+{
+    public static IPayment CreatePayment(string type)
+    {
+        if (type == "Cash")
+            return new CashPayment();
+
+        if (type == "Visa")
+            return new VisaPayment();
+
+        throw new Exception("Invalid Payment Type");
+    }
+}</code></pre>
+<p>الاستخدام:</p>
+<pre><code>IPayment payment = PaymentFactory.CreatePayment("Visa");
+
+payment.Pay(100);</code></pre>
+<p><b>الفكرة:</b> أنا مش عايز أعرف إزاي أعمل <code>new VisaPayment()</code> أو <code>new CashPayment()</code>، فبخلي Factory تنشئ الـ Object المناسب.</p>
+
+<h3>2. Factory Method – كل Factory متخصصة في إنشاء Object</h3>
+<p>بدل ما يكون عندي Factory واحدة فيها شروط، بعمل Factory Base Class، وكل Factory متخصصة تحدد هتنشئ أنهي نوع.</p>
+<pre><code>public abstract class PaymentFactory
+{
+    public abstract IPayment CreatePayment();
+}
+
+public class CashPaymentFactory : PaymentFactory
+{
+    public override IPayment CreatePayment()
+    {
+        return new CashPayment();
+    }
+}
+
+public class VisaPaymentFactory : PaymentFactory
+{
+    public override IPayment CreatePayment()
+    {
+        return new VisaPayment();
+    }
+}</code></pre>
+<p>الاستخدام:</p>
+<pre><code>PaymentFactory factory = new VisaPaymentFactory();
+
+IPayment payment = factory.CreatePayment();
+
+payment.Pay(100);</code></pre>
+<p><b>الفكرة:</b> أنا بفصل قرار إنشاء الـ Object في Factory متخصصة، وكل Factory بتحدد نوع الـ Object اللي هتنشئه.</p>
+
+<h3>3. Strategy – أنا عايز أغيّر طريقة تنفيذ العملية</h3>
+<p>هنا الهدف مختلف. مشكلتي مش إنشاء Object، مشكلتي إن عندي أكتر من طريقة لتنفيذ عملية الدفع.</p>
+<pre><code>public interface IPaymentStrategy
+{
+    void Pay(decimal amount);
+}
+
+public class CashPayment : IPaymentStrategy
+{
+    public void Pay(decimal amount)
+    {
+        Console.WriteLine($"Paid {amount} using Cash");
+    }
+}
+
+public class VisaPayment : IPaymentStrategy
+{
+    public void Pay(decimal amount)
+    {
+        Console.WriteLine($"Paid {amount} using Visa");
+    }
+}</code></pre>
+<p>نعمل كلاس بيستخدم الاستراتيجية:</p>
+<pre><code>public class PaymentService
+{
+    private readonly IPaymentStrategy _strategy;
+
+    public PaymentService(IPaymentStrategy strategy)
+    {
+        _strategy = strategy;
+    }
+
+    public void Pay(decimal amount)
+    {
+        _strategy.Pay(amount);
+    }
+}</code></pre>
+<p>الاستخدام:</p>
+<pre><code>IPaymentStrategy strategy = new VisaPayment();
+
+PaymentService service = new PaymentService(strategy);
+
+service.Pay(100);</code></pre>
+<p><b>الفكرة:</b> <code>PaymentService</code> مش محتاج يعرف تفاصيل الدفع بالفيزا أو الكاش، هو بس بيستخدم الاستراتيجية اللي اتبعتتله.</p>
+
+<h3>4. الفرق الجوهري بينهم</h3>
+<ul>
+  <li><b>Simple Factory</b> — مين هيعمل الـ Object؟ Factory بتختار وتنشئ الـ Object المناسب.</li>
+  <li><b>Factory Method</b> — أنهي Factory هتنشئ الـ Object؟ كل Concrete Factory بتحدد نوع الـ Object اللي هتنشئه.</li>
+  <li><b>Strategy</b> — هننفذ العملية إزاي؟ كل Strategy بتقدم طريقة مختلفة لتنفيذ نفس العملية.</li>
+</ul>
+<div class="table-scroll"><table>
+  <thead><tr><th>المقارنة</th><th>Factory</th><th>Strategy</th></tr></thead>
+  <tbody>
+    <tr><td>الهدف</td><td>إنشاء Objects</td><td>تغيير السلوك</td></tr>
+    <tr><td>السؤال</td><td>هنعمل Object من أنهي Class؟</td><td>هننفذ العملية بأنهي طريقة؟</td></tr>
+    <tr><td>المسؤولية</td><td>Creation</td><td>Behavior</td></tr>
+    <tr><td>الاستخدام</td><td>وقت إنشاء الـ Object</td><td>وقت تنفيذ العملية</td></tr>
+  </tbody>
+</table></div>
+
+<h3>5. هل ممكن نستخدم Factory و Strategy مع بعض؟</h3>
+<p>أيوه! ودي نقطة مهمة جدًا في المشاريع الحقيقية. مثلًا المستخدم اختار Visa، فالـ Factory تنشئ <code>VisaPayment</code>، وبعدها نمرر الـ Object ده إلى <code>PaymentService</code> باعتباره Strategy.</p>
+<pre><code>IPaymentStrategy strategy =
+    PaymentFactory.CreatePayment("Visa");
+
+PaymentService service =
+    new PaymentService(strategy);
+
+service.Pay(100);</code></pre>
+<ol>
+  <li>الـ Factory مسؤولة عن إنشاء الـ Object.</li>
+  <li>الـ Strategy مسؤولة عن تنفيذ طريقة الدفع.</li>
+  <li>الـ PaymentService بيستخدم الاستراتيجية من غير ما يعرف تفاصيلها.</li>
+</ol>
+<div class="note">الـ Factory مش بديل للـ Strategy، وممكن تستخدم الاتنين مع بعض لأن كل واحد بيحل مشكلة مختلفة.</div>
+
+<h3>6. اختبر فهمك</h3>
+<div class="quiz" data-correct="3">
+  <h4>عندك تطبيق فيه 3 طرق لحساب الخصم: Percentage Discount و Fixed Discount و Seasonal Discount، والمستخدم بيختار طريقة الخصم وقت تشغيل التطبيق. إيه الأنسب؟</h4>
+  <button class="opt">Simple Factory فقط</button>
+  <button class="opt">Factory Method فقط</button>
+  <button class="opt">Strategy Pattern</button>
+  <button class="opt">Factory + Strategy</button>
+  <p class="fb" aria-live="polite"></p>
+</div>
+
+<div class="takeaway">
+  <p><b>أهم جملة تحفظها:</b></p>
+  <p dir="ltr" style="text-align:left">Factory = Which object should I create?</p>
+  <p dir="ltr" style="text-align:left">Strategy = Which behavior should I use?</p>
+</div>
+</section>
+
+</div>
+
+<script>
+document.querySelectorAll('.quiz').forEach(function(q){
+  var right = parseInt(q.dataset.correct, 10);
+  var opts = q.querySelectorAll('.opt');
+  var fb = q.querySelector('.fb');
+  opts.forEach(function(b, i){
+    b.addEventListener('click', function(){
+      opts.forEach(function(o){ o.classList.remove('ok','bad'); });
+      if (i === right) {
+        b.classList.add('ok');
+        fb.textContent = 'إجابة صحيحة ✔';
+        fb.style.color = 'var(--ok)';
+        opts.forEach(function(o){ o.disabled = true; });
+      } else {
+        b.classList.add('bad');
+        fb.textContent = 'مش دي، جرّب تاني.';
+        fb.style.color = 'var(--bad)';
+      }
+    });
+  });
+});
+</script>
+</body>
+</html>
