@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decorator Pattern - C# Example</title>
+<style>
+  :root { color-scheme: light; --ink:#172033; --muted:#5b6475; --line:#dce2ec; --panel:#f4f6fa; --accent:#3157a4; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:#eef1f6; color:var(--ink); font-family:Tahoma, Arial, sans-serif; line-height:1.85; }
+  main { max-width:1050px; margin:32px auto; padding:0 18px 48px; }
+  article { background:#fff; border:1px solid var(--line); border-radius:16px; padding:30px; box-shadow:0 8px 28px #1720330b; }
+  h1,h2,h3 { line-height:1.4; }
+  h1 { margin-top:0; color:#203d78; font-size:30px; }
+  h2 { margin-top:32px; padding-bottom:8px; border-bottom:1px solid var(--line); font-size:22px; }
+  h3 { font-size:18px; }
+  p,li { font-size:16px; }
+  .lead { color:var(--muted); font-size:18px; }
+  .note { background:#f1f5ff; border-right:4px solid var(--accent); padding:12px 16px; border-radius:8px; }
+  .warning { background:#fff8e8; border-right:4px solid #d69b22; padding:12px 16px; border-radius:8px; }
+  pre { direction:ltr; text-align:left; white-space:pre; overflow-x:auto; background:#111827; color:#e5e7eb; padding:18px; border-radius:10px; font:14px/1.65 Consolas, "Courier New", monospace; tab-size:4; }
+  code { font-family:Consolas, monospace; }
+  .tag { display:inline-block; direction:ltr; background:#edf1f8; color:#203d78; padding:2px 7px; border-radius:5px; font-family:Consolas,monospace; }
+  .flow { direction:ltr; text-align:center; display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:10px; margin:18px 0; }
+  .flow span { background:#edf1f8; border:1px solid #cbd5e1; border-radius:8px; padding:9px 12px; font:13px Consolas,monospace; }
+  .flow b { color:var(--accent); }
+  footer { color:var(--muted); margin-top:28px; font-size:13px; }
+  @media (max-width:600px) { article { padding:19px; } h1 { font-size:24px; } pre { font-size:12px; } }
+</style>
+</head>
+<body>
+<main>
+<article>
+<h1>Decorator Pattern في C#</h1>
+<p class="lead">إزاي نضيف Logging وEncryption للـ Email وSMS من غير ما نكرر Classes أو نعدّل في الكلاسات الأصلية؟</p>
+
+<h2>1) المشكلة: انفجار عدد الـ Classes</h2>
+<p>تخيل إن عندنا نوعين لإرسال الإشعارات: <span class="tag">EmailNotifier</span> و<span class="tag">SmsNotifier</span>. وبعد كده احتجنا نضيف ميزتين:</p>
+<ul>
+  <li><b>Logging:</b> نسجل إن عملية الإرسال حصلت، وممكن نسجل تفاصيل مناسبة عنها.</li>
+  <li><b>Encryption:</b> نضيف خطوة تشفير للرسالة قبل إرسالها.</li>
+</ul>
+<p>لو اعتمدنا على <b>Inheritance</b> وعملنا Class لكل تركيبة، هنحتاج Classes زي:</p>
+<ul>
+  <li><span class="tag">EmailWithLogging</span></li>
+  <li><span class="tag">EmailWithEncryption</span></li>
+  <li><span class="tag">EmailWithLoggingAndEncryption</span></li>
+  <li>ونكرر نفس التركيبات مع SMS.</li>
+</ul>
+<p>كل ما نزود Feature جديدة، عدد التركيبات المحتملة بيزيد. وده بيعمل تكرار، وبيصعّب الصيانة والتعديل.</p>
+
+<h2>2) الحل: Decorator Pattern</h2>
+<p>بدل ما نعمل Class لكل تركيبة، بنعمل Decorator مستقل لكل Feature. كل Decorator بيستقبل Object بيطبّق نفس الـ Interface <span class="tag">INotifier</span>، ويضيف سلوكه، وبعدها يمرر التنفيذ للـ Object اللي جواه.</p>
+<div class="flow">
+  <span>EmailNotifier / SmsNotifier</span><b>←</b><span>EncryptionDecorator</span><b>←</b><span>LoggingDecorator</span>
+</div>
+<p class="note">الفكرة الأساسية: الـ Decorator نفسه بيطبّق <span class="tag">INotifier</span>، علشان نقدر نستخدمه مكان أي Notifier، ونلف Decorator حوالين Decorator تاني.</p>
+
+<h2>3) الكود الكامل</h2>
+<h3>أولًا: الـ Interface الأساسي</h3>
+<pre><code>public interface INotifier
+{
+    void Send(string message);
+}</code></pre>
+<p>ده العقد المشترك. أي نوع Notification أو Decorator لازم يوفّر الدالة <span class="tag">Send</span>.</p>
+
+<h3>ثانيًا: الكلاسات الأصلية</h3>
+<pre><code>public class EmailNotifier : INotifier
+{
+    public void Send(string message)
+    {
+        Console.WriteLine($"Sending Email: {message}");
+    }
+}
+
+public class SmsNotifier : INotifier
+{
+    public void Send(string message)
+    {
+        Console.WriteLine($"Sending SMS: {message}");
+    }
+}</code></pre>
+<p>الكلاسات دي مسؤولة عن الإرسال الأساسي فقط. مش محتاجة تعرف أي حاجة عن Logging أو Encryption.</p>
+
+<h3>ثالثًا: Logging Decorator</h3>
+<pre><code>public class LoggingDecorator : INotifier
+{
+    private readonly INotifier _notifier;
+
+    public LoggingDecorator(INotifier notifier)
+    {
+        _notifier = notifier;
+    }
+
+    public void Send(string message)
+    {
+        Console.WriteLine("[LOG] Sending notification...");
+
+        _notifier.Send(message);
+
+        Console.WriteLine("[LOG] Notification process finished.");
+    }
+}</code></pre>
+<p>الـ Logging Decorator بياخد أي Object من نوع <span class="tag">INotifier</span>. قبل الإرسال وبعده بيطبع Log، وبعدين بيفوّض الإرسال للـ Object اللي جواه.</p>
+
+<h3>رابعًا: Encryption Decorator</h3>
+<pre><code>public class EncryptionDecorator : INotifier
+{
+    private readonly INotifier _notifier;
+
+    public EncryptionDecorator(INotifier notifier)
+    {
+        _notifier = notifier;
+    }
+
+    public void Send(string message)
+    {
+        string encryptedMessage = Convert.ToBase64String(
+            System.Text.Encoding.UTF8.GetBytes(message)
+        );
+
+        Console.WriteLine("[ENCRYPTION] Message encrypted.");
+
+        _notifier.Send(encryptedMessage);
+    }
+}</code></pre>
+<p>هنا بنحوّل الرسالة إلى Base64 كمثال توضيحي، وبعدها نمرر الناتج للـ Notifier اللي جوه الـ Decorator.</p>
+<div class="warning"><b>ملاحظة مهمة:</b> Base64 مش تشفير آمن؛ ده Encoding فقط. في مشروع حقيقي استخدم خوارزمية تشفير موثوقة وإدارة مفاتيح مناسبة، أو اعتمد على تشفير قناة الاتصال مثل TLS حسب احتياج النظام.</div>
+
+<h3>خامسًا: تجربة التركيبات في Program.cs</h3>
+<pre><code>public class Program
+{
+    public static void Main()
+    {
+        INotifier email = new EmailNotifier();
+
+        INotifier emailWithLogging =
+            new LoggingDecorator(email);
+
+        INotifier emailWithEncryptionAndLogging =
+            new LoggingDecorator(
+                new EncryptionDecorator(
+                    new EmailNotifier()
+                )
+            );
+
+        INotifier smsWithLoggingAndEncryption =
+            new LoggingDecorator(
+                new EncryptionDecorator(
+                    new SmsNotifier()
+                )
+            );
+
+        Console.WriteLine("=== Email with Logging only ===");
+        emailWithLogging.Send("Hello Mohamed");
+
+        Console.WriteLine();
+
+        Console.WriteLine("=== Email with Encryption and Logging ===");
+        emailWithEncryptionAndLogging.Send("Hello Mohamed");
+
+        Console.WriteLine();
+
+        Console.WriteLine("=== SMS with Encryption and Logging ===");
+        smsWithLoggingAndEncryption.Send("Your code is 1234");
+    }
+}</code></pre>
+
+<h2>4) إيه اللي بيحصل وقت التنفيذ؟</h2>
+<p>لما ننفّذ السطر ده:</p>
+<pre><code>INotifier notifier =
+    new LoggingDecorator(
+        new EncryptionDecorator(
+            new EmailNotifier()
+        )
+    );
+
+notifier.Send("Hello");</code></pre>
+<ol>
+  <li>استدعاء <span class="tag">Send</span> يبدأ من <span class="tag">LoggingDecorator</span>.</li>
+  <li>الـ Logging يطبع رسالة بداية العملية.</li>
+  <li>ينادي <span class="tag">EncryptionDecorator.Send</span>.</li>
+  <li>الـ Encryption يحوّل الرسالة إلى Base64.</li>
+  <li>ينادي <span class="tag">EmailNotifier.Send</span> بالرسالة الناتجة.</li>
+  <li>بعد رجوع التنفيذ، الـ Logging يطبع إن العملية انتهت.</li>
+</ol>
+<p>يعني الترتيب هنا: <b>Logging قبل الإرسال، ثم Encryption، ثم Email</b>. ترتيب الـ Decorators مهم؛ لأن كل واحد بيضيف سلوكه في المكان اللي هو موجود فيه في السلسلة.</p>
+
+<h2>5) ليه Decorator أفضل هنا؟</h2>
+<ul>
+  <li><b>إعادة استخدام:</b> نفس Logging Decorator يشتغل مع Email أو SMS أو أي Notifier جديد.</li>
+  <li><b>تركيب مرن:</b> تقدر تضيف Logging فقط، أو Encryption فقط، أو الاتنين.</li>
+  <li><b>من غير تعديل الأصل:</b> مش محتاج تغيّر <span class="tag">EmailNotifier</span> أو <span class="tag">SmsNotifier</span>.</li>
+  <li><b>تقليل التكرار:</b> كل Feature مكتوبة مرة واحدة في Decorator مستقل.</li>
+</ul>
+
+<h2>6) الخلاصة بالبلدي</h2>
+<p>اعتبر إن عندك جهاز أساسي، وكل Decorator عبارة عن طبقة بتضيف له إمكانيّة. تقدر تركّب طبقة Logging وطبقة Encryption فوق أي Notifier، وبأي ترتيب مناسب، من غير ما تعمل Class جديد لكل احتمال.</p>
+<p class="note"><b>افتكر:</b> Decorator = نفس الـ Interface + Object من نفس النوع + سلوك إضافي + تمرير التنفيذ للـ Object الداخلي.</p>
+<footer>مثال تعليمي باستخدام C# وConsole Application. يمكن وضع الكلاسات في ملفات منفصلة أو معًا داخل مشروع واحد.</footer>
+</article>
+</main>
+</body>
+</html>

@@ -1,3 +1,4 @@
 <Solution>
+  <Project Path="../Decorator Design pattern/Decorator Design pattern.csproj" Id="b91628aa-8e9c-4025-8c92-854778193f63" />
   <Project Path="Factory Pattern.csproj" />
 </Solution>
