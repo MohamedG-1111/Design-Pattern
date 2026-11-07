@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>شرح Adapter Design Pattern</title>
+  <style>
+    :root { color-scheme: light; --ink:#172033; --muted:#596579; --primary:#2457a7; --soft:#eef4ff; --border:#dce3ee; --code:#111827; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:#f5f7fb; color:var(--ink); font-family:Tahoma, Arial, sans-serif; line-height:1.9; }
+    main { width:min(980px, 92%); margin:36px auto; background:#fff; padding:clamp(20px,4vw,46px); border:1px solid var(--border); border-radius:18px; box-shadow:0 10px 35px #1720330d; }
+    h1,h2,h3 { line-height:1.45; }
+    h1 { color:var(--primary); font-size:2rem; margin-top:0; }
+    h2 { margin-top:38px; padding-bottom:8px; border-bottom:2px solid var(--border); color:#203b68; }
+    h3 { color:#294d82; margin-bottom:8px; }
+    p { margin:10px 0; }
+    .lead,.note { background:var(--soft); border-right:4px solid var(--primary); padding:14px 18px; border-radius:8px; }
+    .warning { background:#fff8e8; border-right:4px solid #d69a20; padding:14px 18px; border-radius:8px; }
+    pre { direction:ltr; text-align:left; white-space:pre; overflow-x:auto; background:var(--code); color:#e5e7eb; padding:18px; border-radius:12px; line-height:1.6; font:14px/1.65 Consolas, monospace; }
+    code.inline { direction:ltr; display:inline-block; background:#eef1f6; color:#9b2850; padding:0 6px; border-radius:5px; font-family:Consolas,monospace; }
+    ul,ol { padding-right:26px; }
+    li { margin:7px 0; }
+    table { width:100%; border-collapse:collapse; margin:16px 0; }
+    th,td { border:1px solid var(--border); padding:10px 12px; text-align:right; vertical-align:top; }
+    th { background:var(--soft); }
+    .step { display:inline-block; background:#e6efff; color:#214f9b; border-radius:7px; padding:2px 9px; font-weight:bold; }
+    footer { color:var(--muted); border-top:1px solid var(--border); margin-top:42px; padding-top:16px; font-size:.92rem; }
+    @media print { body { background:white; } main { width:100%; margin:0; border:0; box-shadow:none; } pre { white-space:pre-wrap; overflow-wrap:anywhere; } }
+  </style>
+</head>
+<body>
+<main>
+  <h1>شرح Adapter Design Pattern</h1>
+  <p class="lead">هنفهم الـ <strong>Adapter Pattern</strong> من الصفر وبالمصري: المشكلة اللي بيحلها، ليه بنحتاجه، مثال كامل بـ C#، وطريقة تنفيذ الكود خطوة خطوة.</p>
+
+  <h2>1. يعني إيه Adapter؟</h2>
+  <p>كلمة Adapter معناها «محوّل». زي محوّل الشاحن: عندك فيشة بشكل معيّن ومقبس بشكل مختلف، فبتستخدم قطعة في النص تخلي الاتنين يشتغلوا مع بعض.</p>
+  <p>في البرمجة الفكرة نفسها: ممكن يكون عندك كود في مشروعك متوقع يتعامل مع Interface معيّن، وتحتاج تستخدم كلاس جاهز أو مكتبة خارجية، لكن طريقة التعامل معاها مختلفة. بدل ما تغيّر نظامك كله أو تعدّل المكتبة الخارجية، بتعمل كلاس وسيط اسمه <strong>Adapter</strong> يحوّل طريقة النداء من الشكل اللي نظامك متوقعه للشكل اللي الكلاس الخارجي بيفهمه.</p>
+
+  <h2>2. المشكلة اللي بنحلها</h2>
+  <p>افترض إن عندنا نظام إشعارات، والنظام بتاعنا متفق إن أي وسيلة إرسال لازم تطبّق الـ Interface ده:</p>
+  <pre><code>public interface INotifier
+{
+    void Send(string message);
+}</code></pre>
+  <p>يعني أي كلاس عايز يدخل نظام الإشعارات لازم يوفّر دالة اسمها <code class="inline">Send</code> وتستقبل رسالة نصية.</p>
+  <p>عندنا كلاس للإيميل وكلاس للـ SMS، والاتنين ملتزمين بالاتفاق:</p>
+  <pre><code>public class EmailNotifier : INotifier
+{
+    public void Send(string message)
+    {
+        Console.WriteLine($"Sending Email: {message}");
+    }
+}
+
+public class SmsNotifier : INotifier
+{
+    public void Send(string message)
+    {
+        Console.WriteLine($"Sending SMS: {message}");
+    }
+}</code></pre>
+  <p>وعندنا كلاس مسؤول عن تشغيل الإشعارات. هو مش مهتم هتبعت Email ولا SMS؛ هو بيتعامل مع أي كائن من نوع <code class="inline">INotifier</code>:</p>
+  <pre><code>public class NotificationManager
+{
+    private readonly INotifier _notifier;
+
+    public NotificationManager(INotifier notifier)
+    {
+        _notifier = notifier;
+    }
+
+    public void Notify(string message)
+    {
+        _notifier.Send(message);
+    }
+}</code></pre>
+  <p>لحد هنا الدنيا تمام. نقدر نستخدمه كده:</p>
+  <pre><code>var emailManager = new NotificationManager(new EmailNotifier());
+emailManager.Notify("Your order has been shipped");
+
+var smsManager = new NotificationManager(new SmsNotifier());
+smsManager.Notify("Your order is ready");</code></pre>
+
+  <h2>3. ظهرت المشكلة لما استخدمنا مكتبة خارجية</h2>
+  <p>افترض إن الشركة قررت تضيف WhatsApp، واشترينا أو استخدمنا مكتبة خارجية بتوفّر الكلاس ده:</p>
+  <pre><code>// كلاس جاي من مكتبة خارجية
+public class WhatsAppService
+{
+    public void SendWhatsAppMessage(string text)
+    {
+        Console.WriteLine($"Sending WhatsApp Message: {text}");
+    }
+}</code></pre>
+  <p>خد بالك من الفرق:</p>
+  <ul>
+    <li>نظامنا متوقع دالة اسمها <code class="inline">Send(string message)</code>.</li>
+    <li>المكتبة الخارجية بتوفّر دالة اسمها <code class="inline">SendWhatsAppMessage(string text)</code>.</li>
+  </ul>
+  <p>المعنى واحد تقريبًا، لكن شكل الـ Interface مختلف. عشان كده مش هينفع نمرّر <code class="inline">WhatsAppService</code> مباشرةً إلى <code class="inline">NotificationManager</code>؛ لأنه مش بيطبّق <code class="inline">INotifier</code>.</p>
+  <pre><code>// ده مش هيشتغل:
+var manager = new NotificationManager(new WhatsAppService());</code></pre>
+  <div class="warning"><strong>ملحوظة:</strong> المشكلة مش إن WhatsAppService مش بيعرف يبعت رسالة. هو بيعرف، لكن نظامنا مش عارف يتعامل معاه؛ لأن طريقة النداء مختلفة.</div>
+
+  <h2>4. الحل: نعمل Adapter</h2>
+  <p>هنعمل كلاس جديد اسمه <code class="inline">WhatsAppAdapter</code>. الكلاس ده هيطبّق الـ Interface اللي نظامنا فاهمه <code class="inline">INotifier</code>، وفي نفس الوقت هيحتفظ بكائن من <code class="inline">WhatsAppService</code> ويستخدمه من جوّاه.</p>
+  <pre><code>public class WhatsAppAdapter : INotifier
+{
+    private readonly WhatsAppService _whatsAppService;
+
+    public WhatsAppAdapter(WhatsAppService whatsAppService)
+    {
+        _whatsAppService = whatsAppService;
+    }
+
+    public void Send(string message)
+    {
+        _whatsAppService.SendWhatsAppMessage(message);
+    }
+}</code></pre>
+  <h3>نفهم كل جزء ببساطة</h3>
+  <ol>
+    <li><code class="inline">: INotifier</code>: معناها إن الـ Adapter ملتزم بالعقد اللي نظامنا متوقعه، وبالتالي لازم يوفّر دالة <code class="inline">Send</code>.</li>
+    <li><code class="inline">private readonly WhatsAppService</code>: بنحتفظ بكائن من الكلاس الخارجي عشان نقدر نستخدمه.</li>
+    <li>الـ Constructor بيستقبل كائن <code class="inline">WhatsAppService</code> ويحفظه في المتغير <code class="inline">_whatsAppService</code>.</li>
+    <li>دالة <code class="inline">Send</code> هي الدالة اللي نظامنا بيناديها. والـ Adapter بيحوّل النداء ده لنداء المكتبة الخارجية: <code class="inline">SendWhatsAppMessage</code>.</li>
+  </ol>
+  <p class="note">ببساطة: الـ Adapter بيقول لنظامنا «ناديني بالطريقة اللي إنت متعود عليها، وأنا هتصرف وأكلم المكتبة بالطريقة اللي هي بتفهمها».</p>
+
+  <h2>5. الاستخدام بعد إضافة الـ Adapter</h2>
+  <pre><code>var whatsAppService = new WhatsAppService();
+var whatsAppAdapter = new WhatsAppAdapter(whatsAppService);
+
+var manager = new NotificationManager(whatsAppAdapter);
+manager.Notify("Your order has been shipped");</code></pre>
+  <p>لاحظ إن <code class="inline">NotificationManager</code> ما اتغيرش خالص. هو لسه بيستقبل <code class="inline">INotifier</code> وبينادي <code class="inline">Send</code>. الـ Adapter هو اللي اتولى تحويل النداء.</p>
+
+  <h2>6. الكود كامل في مكان واحد</h2>
+  <pre><code>using System;
+
+public interface INotifier
+{
+    void Send(string message);
+}
+
+public class EmailNotifier : INotifier
+{
+    public void Send(string message)
+    {
+        Console.WriteLine($"Sending Email: {message}");
+    }
+}
+
+public class SmsNotifier : INotifier
+{
+    public void Send(string message)
+    {
+        Console.WriteLine($"Sending SMS: {message}");
+    }
+}
+
+// كلاس من مكتبة خارجية، ومش بنقدر أو مش مطلوب نعدّل فيه
+public class WhatsAppService
+{
+    public void SendWhatsAppMessage(string text)
+    {
+        Console.WriteLine($"Sending WhatsApp Message: {text}");
+    }
+}
+
+// الـ Adapter بيحوّل واجهة WhatsAppService لواجهة INotifier
+public class WhatsAppAdapter : INotifier
+{
+    private readonly WhatsAppService _whatsAppService;
+
+    public WhatsAppAdapter(WhatsAppService whatsAppService)
+    {
+        _whatsAppService = whatsAppService;
+    }
+
+    public void Send(string message)
+    {
+        _whatsAppService.SendWhatsAppMessage(message);
+    }
+}
+
+public class NotificationManager
+{
+    private readonly INotifier _notifier;
+
+    public NotificationManager(INotifier notifier)
+    {
+        _notifier = notifier;
+    }
+
+    public void Notify(string message)
+    {
+        _notifier.Send(message);
+    }
+}
+
+public class Program
+{
+    public static void Main()
+    {
+        // Email
+        var emailManager = new NotificationManager(new EmailNotifier());
+        emailManager.Notify("Hello by Email");
+
+        // SMS
+        var smsManager = new NotificationManager(new SmsNotifier());
+        smsManager.Notify("Hello by SMS");
+
+        // WhatsApp باستخدام الـ Adapter
+        var whatsAppService = new WhatsAppService();
+        var whatsAppAdapter = new WhatsAppAdapter(whatsAppService);
+        var whatsAppManager = new NotificationManager(whatsAppAdapter);
+        whatsAppManager.Notify("Hello by WhatsApp");
+    }
+}</code></pre>
+
+  <h2>7. الكود بيتنفّذ إزاي؟</h2>
+  <ol>
+    <li><span class="step">1</span> بننشئ <code class="inline">WhatsAppService</code>، وده الكائن اللي جاي من المكتبة الخارجية.</li>
+    <li><span class="step">2</span> بنمرّره للـ Constructor بتاع <code class="inline">WhatsAppAdapter</code>، فالـ Adapter يحتفظ بيه.</li>
+    <li><span class="step">3</span> بنمرّر الـ Adapter إلى <code class="inline">NotificationManager</code>. وده ينفع لأنه بيطبّق <code class="inline">INotifier</code>.</li>
+    <li><span class="step">4</span> لما ننادي <code class="inline">Notify</code>، الـ Manager ينادي <code class="inline">_notifier.Send(message)</code>.</li>
+    <li><span class="step">5</span> التنفيذ يدخل دالة <code class="inline">Send</code> الموجودة في <code class="inline">WhatsAppAdapter</code>.</li>
+    <li><span class="step">6</span> الـ Adapter ينادي <code class="inline">SendWhatsAppMessage</code> على كائن WhatsAppService، فتتبعت الرسالة.</li>
+  </ol>
+  <h3>الـ Output المتوقع</h3>
+  <pre><code>Sending Email: Hello by Email
+Sending SMS: Hello by SMS
+Sending WhatsApp Message: Hello by WhatsApp</code></pre>
+
+  <h2>8. ليه ما نعدّلش NotificationManager وخلاص؟</h2>
+  <p>ممكن نظريًا نضيف شرط لكل نوع:</p>
+  <pre><code>if (type == "Email")
+    email.Send(message);
+else if (type == "WhatsApp")
+    whatsApp.SendWhatsAppMessage(message);</code></pre>
+  <p>لكن مع كل مكتبة أو وسيلة جديدة هنفضل نعدّل في الكود الأساسي ونضيف شروط جديدة. ده بيخلّي النظام مرتبط بتفاصيل كل مكتبة، وبيصعّب الاختبار والصيانة.</p>
+  <p>باستخدام Adapter، بنعزل اختلاف المكتبة في كلاس مستقل، ونسيب الكود الأساسي يتعامل مع Interface واحد ثابت.</p>
+
+  <h2>9. إمتى أستخدم Adapter؟</h2>
+  <ul>
+    <li>لما تحتاج تستخدم مكتبة خارجية وواجهتها مختلفة عن الواجهة الموجودة في مشروعك.</li>
+    <li>لما يكون عندك كود قديم (Legacy Code) وعايز توصّله بنظام جديد من غير ما تغيّر الكود القديم.</li>
+    <li>لما تتعامل مع أكثر من مزوّد لخدمة واحدة، وكل مزوّد عنده أسماء دوال أو طريقة استخدام مختلفة.</li>
+    <li>لما تحب تخلي تفاصيل التكامل مع خدمة خارجية معزولة بدل ما تنتشر في كل أجزاء المشروع.</li>
+  </ul>
+
+  <h2>10. الفرق بين Adapter و Decorator</h2>
+  <table>
+    <thead><tr><th>Adapter Pattern</th><th>Decorator Pattern</th></tr></thead>
+    <tbody>
+      <tr><td>بيغيّر أو يكيّف شكل الواجهة عشان كودين مش متوافقين يقدروا يتعاملوا.</td><td>بيضيف سلوك أو مسؤولية لكائن موجود من غير ما يغيّر الكلاس الأصلي.</td></tr>
+      <tr><td>مثال: عندي <code class="inline">SendWhatsAppMessage</code> والنظام محتاج <code class="inline">Send</code>.</td><td>مثال: أضيف Logging أو Encryption حوالين خدمة الإرسال.</td></tr>
+      <tr><td>الهدف الأساسي: التوافق بين واجهتين مختلفتين.</td><td>الهدف الأساسي: إضافة سلوك بشكل مرن وقابل للتركيب.</td></tr>
+    </tbody>
+  </table>
+  <p><strong>احفظها كده:</strong> Adapter يخلّي حاجتين مش فاهمين بعض يشتغلوا مع بعض. Decorator يزوّد إمكانيات كائن موجود.</p>
+
+  <h2>11. سؤال تتأكد بيه إنك فهمت</h2>
+  <div class="note">
+    <p>عندك النظام بتاعك متوقع:</p>
+    <pre><code>public interface INotifier
+{
+    void Send(string message);
+}</code></pre>
+    <p>وجالك كلاس من مكتبة خارجية بالشكل ده:</p>
+    <pre><code>public class ExternalSmsLibrary
+{
+    public void SendSmsMessage(string phoneNumber, string text)
+    {
+        Console.WriteLine($"To: {phoneNumber}, Message: {text}");
+    }
+}</code></pre>
+    <p><strong>المطلوب:</strong> إزاي تخلي <code class="inline">NotificationManager</code> يستخدم المكتبة دي من غير ما تغيّر <code class="inline">NotificationManager</code>؟</p>
+    <p><strong>فكّر في الحل:</strong> هتعمل <code class="inline">SmsAdapter : INotifier</code>، وتخليه يستقبل <code class="inline">ExternalSmsLibrary</code> في الـ Constructor. وفي دالة <code class="inline">Send(string message)</code> هتنادي <code class="inline">SendSmsMessage(phoneNumber, message)</code>. محتاج كمان تحدد رقم التليفون من إعدادات أو بيانات مناسبة، لأن المكتبة بتطلبه.</p>
+  </div>
+
+  <h2>الخلاصة</h2>
+  <ol>
+    <li>عندك نظام بيتعامل مع Interface محدد.</li>
+    <li>لقيت كلاس أو مكتبة بتعمل نفس الوظيفة لكن بواجهة مختلفة.</li>
+    <li>بتنشئ Adapter يطبّق الـ Interface اللي نظامك محتاجه.</li>
+    <li>الـ Adapter يحتفظ بالكائن الخارجي وينادي دواله بالطريقة المناسبة.</li>
+    <li>النظام الأساسي يفضل يتعامل مع الـ Interface المعتاد من غير ما يعرف تفاصيل المكتبة.</li>
+  </ol>
+  <footer>شرح تعليمي مبسّط لـ Adapter Design Pattern باستخدام C#.</footer>
+</main>
+</body>
+</html>
